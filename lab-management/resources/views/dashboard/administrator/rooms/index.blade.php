@@ -6,6 +6,7 @@
 <div class="container-xxl py-4">
     <h3>Rooms (Administrator)</h3>
     <a class="btn btn-primary mb-3" href="{{ route('rooms.create') }}">Create Room</a>
+    <a class="btn btn-danger mb-3" href="{{ route('dashboard') }}">Kembali</a>
     <div class="card">
         <div class="card-body">
             <table class="table">

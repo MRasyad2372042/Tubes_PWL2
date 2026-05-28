@@ -20,9 +20,16 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Role</label>
-                    <input type="text" name="role" class="form-control" value="{{ $user['role'] ?? '' }}">
+                    <select name="role" class="form-select" required>
+                        <option value="administrator" {{ $user['role'] === 'administrator' ? 'selected' : '' }}>Administrator</option>
+                        <option value="kepala_laboratorium" {{ $user['role'] === 'kepala_laboratorium' ? 'selected' : '' }}>Kepala Laboratorium</option>
+                        <option value="ketua_program_studi" {{ $user['role'] === 'ketua_program_studi' ? 'selected' : '' }}>Ketua Program Studi</option>
+                        <option value="staf_administrasi" {{ $user['role'] === 'staf_administrasi' ? 'selected' : '' }}>Staf Administrasi</option>
+                        <option value="staf_laboratorium" {{ $user['role'] === 'staf_laboratorium' ? 'selected' : '' }}>Staf Laboratorium</option>
+                    </select>
                 </div>
                 <button class="btn btn-primary">Save</button>
+            <a href="{{ route('users.index') }}" class="btn btn-secondary ms-2">Kembali</a>
             </form>
         </div>
     </div>

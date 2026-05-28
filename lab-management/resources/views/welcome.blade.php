@@ -19,7 +19,6 @@
 
           <div class="d-flex justify-content-center gap-2">
             <a href="{{ route('login') }}" class="btn btn-primary">Sign in</a>
-            <a href="{{ route('register') }}" class="btn btn-outline-primary">Create Account</a>
           </div>
         </div>
       </div>

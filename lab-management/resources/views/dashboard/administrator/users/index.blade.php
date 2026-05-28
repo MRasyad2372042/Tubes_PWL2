@@ -6,6 +6,7 @@
 <div class="container-xxl py-4">
     <h3>Users (Administrator)</h3>
     <a class="btn btn-primary mb-3" href="{{ route('users.create') }}">Create User</a>
+    <a class="btn btn-danger mb-3" href="{{ route('dashboard') }}">Kembali</a>
     <div class="card">
         <div class="card-body">
             <table class="table">
@@ -27,7 +28,7 @@
                         <td>{{ $user['role'] ?? '-' }}</td>
                         <td>
                             <a href="{{ route('users.edit', $user['id']) }}" class="btn btn-sm btn-secondary">Edit</a>
-                            <form action="{{ route('users.destroy', $user['id']) }}" method="POST" style="display:inline-block">
+                            <form onsubmit="return confirm('Yakin ingin menghapus user {{ $user['name'] }}?' action="{{ route('users.destroy', $user['id']) }}" method="POST" style="display:inline-block">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn btn-sm btn-danger">Delete</button>

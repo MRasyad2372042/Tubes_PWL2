@@ -19,6 +19,7 @@
                     <input type="text" name="location" class="form-control" value="{{ $room['location'] }}">
                 </div>
                 <button class="btn btn-primary">Save</button>
+            <a href="{{ route('rooms.index') }}" class="btn btn-secondary ms-2">Kembali</a>
             </form>
         </div>
     </div>

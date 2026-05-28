@@ -46,5 +46,5 @@ use App\Http\Controllers\UserPageController;
 use App\Http\Controllers\RoomPageController;
 use Illuminate\Support\Facades\DB;
 
-Route::resource('users', UserPageController::class)->middleware('auth');
-Route::resource('rooms', RoomPageController::class)->middleware('auth');
+Route::resource('users', UserPageController::class)->middleware(['auth', 'role:administrator']);
+Route::resource('rooms', RoomPageController::class)->middleware(['auth', 'role:administrator']);
