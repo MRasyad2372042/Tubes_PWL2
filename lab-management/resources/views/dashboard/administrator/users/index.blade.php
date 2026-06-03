@@ -28,10 +28,10 @@
                         <td>{{ $user['role'] ?? '-' }}</td>
                         <td>
                             <a href="{{ route('users.edit', $user['id']) }}" class="btn btn-sm btn-secondary">Edit</a>
-                            <form onsubmit="return confirm('Yakin ingin menghapus user {{ $user['name'] }}?' action="{{ route('users.destroy', $user['id']) }}" method="POST" style="display:inline-block">
+                            <form action="{{ route('users.destroy', $user['id']) }}" method="POST" style="display:inline-block" onsubmit="return confirm('Yakin ingin menghapus user {{ $user['name'] }}?')">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-sm btn-danger">Delete</button>
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                             </form>
                         </td>
                     </tr>
