@@ -21,12 +21,22 @@ class RoomPageController extends Controller
 
     public function store(Request $request)
     {
-        Http::post('http://localhost:3000/api/rooms', [
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'location' => 'nullable|string|max:255',
+        ]);
+
+        $response = Http::post('http://localhost:3000/api/rooms', [
             'name' => $request->name,
             'location' => $request->location,
         ]);
 
-        return redirect()->route('rooms.index');
+        if ($response->successful()) {
+            return redirect()->route('rooms.index')->with('success', 'Room berhasil ditambahkan.');
+        }
+
+        $message = $response->json('error') ?: 'Gagal menambahkan room. Silakan coba lagi.';
+        return redirect()->route('rooms.create')->with('error', $message);
     }
 
     public function edit($id)
@@ -39,12 +49,22 @@ class RoomPageController extends Controller
 
     public function update(Request $request, $id)
     {
-        Http::put("http://localhost:3000/api/rooms/{$id}", [
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'location' => 'nullable|string|max:255',
+        ]);
+
+        $response = Http::put("http://localhost:3000/api/rooms/{$id}", [
             'name' => $request->name,
             'location' => $request->location,
         ]);
 
-        return redirect()->route('rooms.index');
+        if ($response->successful()) {
+            return redirect()->route('rooms.index')->with('success', 'Room berhasil diperbarui.');
+        }
+
+        $message = $response->json('error') ?: 'Gagal memperbarui room. Silakan coba lagi.';
+        return redirect()->route('rooms.edit', $id)->with('error', $message);
     }
 
     public function destroy($id)

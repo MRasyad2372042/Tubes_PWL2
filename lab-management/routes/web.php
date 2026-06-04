@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoomPageController;
+use App\Http\Controllers\StafLaboratoriumController;
+use App\Http\Controllers\UserPageController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -28,7 +32,7 @@ Route::get('/dashboard', function () {
         'kepala_laboratorium' => view('dashboard.kepala_laboratorium.index'),
         'ketua_program_studi' => view('dashboard.ketua_program_studi.index'),
         'staf_administrasi' => view('dashboard.staf_administrasi.index'),
-        'staf_laboratorium' => view('dashboard.staf_laboratorium.index'),
+        'staf_laboratorium' => app(StafLaboratoriumController::class)->index(),
         default => view('sneat.dashboard'),
     };
 
@@ -42,9 +46,17 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
-use App\Http\Controllers\UserPageController;
-use App\Http\Controllers\RoomPageController;
-use Illuminate\Support\Facades\DB;
-
 Route::resource('users', UserPageController::class)->middleware(['auth', 'role:administrator']);
 Route::resource('rooms', RoomPageController::class)->middleware(['auth', 'role:administrator']);
+
+Route::prefix('laboratorium')->middleware(['auth', 'role:staf_laboratorium'])->group(function () {
+    Route::get('/stock-bhp', [StafLaboratoriumController::class, 'bhpIndex'])->name('stock-bhp.index');
+    Route::get('/stock-bhp/create', [StafLaboratoriumController::class, 'bhpCreate'])->name('stock-bhp.create');
+    Route::post('/stock-bhp', [StafLaboratoriumController::class, 'bhpStore'])->name('stock-bhp.store');
+    Route::get('/stock-bhp/{id}/edit', [StafLaboratoriumController::class, 'bhpEdit'])->name('stock-bhp.edit');
+    Route::put('/stock-bhp/{id}', [StafLaboratoriumController::class, 'bhpUpdate'])->name('stock-bhp.update');
+
+    Route::get('/maintenance', [StafLaboratoriumController::class, 'maintenanceIndex'])->name('maintenance.index');
+    Route::get('/maintenance/create', [StafLaboratoriumController::class, 'maintenanceCreate'])->name('maintenance.create');
+    Route::post('/maintenance', [StafLaboratoriumController::class, 'maintenanceStore'])->name('maintenance.store');
+});

@@ -19,7 +19,7 @@
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <span class="fw-semibold d-block mb-1 text-muted">Total BHP</span>
-                <h3 class="card-title mb-0">0</h3>
+                <h3 class="card-title mb-0">{{ $totals['total_bhp'] ?? 0 }}</h3>
               </div>
               <div class="avatar flex-shrink-0">
                 <span class="avatar-initial rounded bg-label-primary">
@@ -37,7 +37,7 @@
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <span class="fw-semibold d-block mb-1 text-muted">Stok Kritis</span>
-                <h3 class="card-title mb-0">0</h3>
+                <h3 class="card-title mb-0">{{ $totals['critical_count'] ?? 0 }}</h3>
               </div>
               <div class="avatar flex-shrink-0">
                 <span class="avatar-initial rounded bg-label-danger">
@@ -55,7 +55,7 @@
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <span class="fw-semibold d-block mb-1 text-muted">Total Inventaris</span>
-                <h3 class="card-title mb-0">0</h3>
+                <h3 class="card-title mb-0">{{ $totals['total_inventory'] ?? 0 }}</h3>
               </div>
               <div class="avatar flex-shrink-0">
                 <span class="avatar-initial rounded bg-label-info">
@@ -73,7 +73,7 @@
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <span class="fw-semibold d-block mb-1 text-muted">Log Maintenance</span>
-                <h3 class="card-title mb-0">0</h3>
+                <h3 class="card-title mb-0">{{ $totals['maintenance_count'] ?? 0 }}</h3>
               </div>
               <div class="avatar flex-shrink-0">
                 <span class="avatar-initial rounded bg-label-warning">
@@ -95,7 +95,7 @@
             <h5 class="mb-0">
               <i class="bx bx-error text-danger me-1"></i> BHP Stok Kritis
             </h5>
-            <a href="#" class="btn btn-outline-primary btn-sm">Kelola Stok</a>
+            <a href="{{ route('stock-bhp.index') }}" class="btn btn-outline-primary btn-sm">Kelola Stok</a>
           </div>
           <div class="card-body">
             <div class="table-responsive">
@@ -129,7 +129,7 @@
             <h5 class="mb-0">
               <i class="bx bx-history me-1"></i> Log Maintenance Terbaru
             </h5>
-            <a href="#" class="btn btn-outline-primary btn-sm">+ Tambah Log</a>
+            <a href="{{ route('maintenance.create') }}" class="btn btn-outline-primary btn-sm">+ Tambah Log</a>
           </div>
           <div class="card-body">
             <div class="table-responsive">
@@ -165,13 +165,13 @@
       <div class="card-body">
         <div class="row g-3">
           <div class="col-md-3">
-            <a href="#" class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center gap-2">
+            <a href="{{ route('stock-bhp.index') }}" class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center gap-2">
               <i class="bx bx-cabinet fs-3"></i>
               <span>Kelola Stok BHP</span>
             </a>
           </div>
           <div class="col-md-3">
-            <a href="#" class="btn btn-outline-warning w-100 py-3 d-flex flex-column align-items-center gap-2">
+            <a href="{{ route('maintenance.create') }}" class="btn btn-outline-warning w-100 py-3 d-flex flex-column align-items-center gap-2">
               <i class="bx bx-wrench fs-3"></i>
               <span>Tambah Log Maintenance</span>
             </a>
