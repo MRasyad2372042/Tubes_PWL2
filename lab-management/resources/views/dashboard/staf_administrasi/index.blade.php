@@ -114,7 +114,7 @@
                     <td>{{ $item['item_name'] }}</td>
                     <td>{{ $item['quantity'] }}</td>
                     <td>
-                      <a href="{{ route('administrasi.receive', $item['id']) }}" class="btn btn-sm btn-success">Terima</a>
+                      <a href="{{ route('administrasi.receive', $item['procurement_item_id']) }}" class="btn btn-sm btn-success">Terima</a>
                     </td>
                   </tr>
                   @empty

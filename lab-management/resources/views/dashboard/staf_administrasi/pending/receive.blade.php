@@ -22,10 +22,10 @@
               <dt>Jumlah</dt>
               <dd>{{ $item['quantity'] }}</dd>
               <dt>Estimasi Harga</dt>
-              <dd>Rp {{ number_format($item['estimated_price'], 0, ',', '.') }}</dd>
+              <dd>Rp {{ number_format($item['estimated_price'] ?? 0, 0, ',', '.') }}</dd>
               <dt>Draf Asal</dt>
               <dd>{{ $item['draft_title'] ?? '-' }} ({{ $item['draft_year'] ?? '-' }})</dd>
-              @if($item['purchase_link'])
+              @if($item['purchase_link'] ?? false)
               <dt>Link Pembelian</dt>
               <dd><a href="{{ $item['purchase_link'] }}" target="_blank">Buka Link <i class="bx bx-link-external"></i></a></dd>
               @endif
@@ -39,7 +39,7 @@
         <div class="card">
           <div class="card-header"><h6 class="mb-0">Form Penerimaan</h6></div>
           <div class="card-body">
-            <form action="{{ route('administrasi.receive.store', $item['id']) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('administrasi.receive.store', $item['procurement_item_id']) }}" method="POST" enctype="multipart/form-data">
               @csrf
               <input type="hidden" name="item_name" value="{{ $item['item_name'] }}">
 
@@ -54,7 +54,7 @@
                 </div>
               </div>
 
-              @if($item['item_type'] === 'inventory')
+              @if(($item['item_type'] ?? '') === 'inventory')
                 <input type="hidden" name="item_type" value="inventory">
                 <div class="mb-3">
                   <label for="inventory_code" class="form-label">Nomor Label / Kode Inventaris</label>
@@ -95,7 +95,7 @@
                   </div>
                 </div>
 
-              @elseif($item['item_type'] === 'bhp')
+              @elseif(($item['item_type'] ?? '') === 'bhp')
                 <input type="hidden" name="item_type" value="bhp">
                 <div class="row">
                   <div class="col-md-6 mb-3">
