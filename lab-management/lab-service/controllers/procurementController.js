@@ -68,7 +68,7 @@ exports.finalizedDrafts = (req, res) => {
     });
 };
 
-// POST /api/procurement/drafts
+// POST /api/procurement/drafts/
 exports.storeDraft = (req, res) => {
     const { title, year, created_by } = req.body;
     if (!title || !year || !created_by) {
