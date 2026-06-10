@@ -46,13 +46,13 @@
     @if($role === 'kepala_laboratorium')
       <li class="menu-header small text-uppercase"><span class="menu-header-text">Pengadaan</span></li>
       <li class="menu-item {{ request()->is('pengadaan/buat*') ? 'active' : '' }}">
-        <a href="#" class="menu-link">
+        <a href="{{ route('pengadaan.create') }}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-file-blank"></i>
           <div>Buat Draf</div>
         </a>
       </li>
-      <li class="menu-item {{ request()->is('pengadaan*') ? 'active' : '' }}">
-        <a href="#" class="menu-link">
+      <li class="menu-item {{ request()->is('pengadaan') || request()->is('pengadaan/[0-9]*') ? 'active' : '' }}">
+        <a href="{{ route('pengadaan.index') }}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-list-ul"></i>
           <div>Riwayat Draf</div>
         </a>
@@ -62,10 +62,16 @@
     {{-- KETUA PROGRAM STUDI --}}
     @if($role === 'ketua_program_studi')
       <li class="menu-header small text-uppercase"><span class="menu-header-text">Review</span></li>
-      <li class="menu-item">
-        <a href="#" class="menu-link">
+      <li class="menu-item {{ request()->is('review') || request()->is('review/[0-9]*') ? 'active' : '' }}">
+        <a href="{{ route('review.index') }}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-check-shield"></i>
           <div>Review Pengadaan</div>
+        </a>
+      </li>
+      <li class="menu-item {{ request()->is('review/history*') ? 'active' : '' }}">
+        <a href="{{ route('review.history') }}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-history"></i>
+          <div>Riwayat Finalisasi</div>
         </a>
       </li>
     @endif
@@ -73,16 +79,16 @@
     {{-- STAF ADMINISTRASI --}}
     @if($role === 'staf_administrasi')
       <li class="menu-header small text-uppercase"><span class="menu-header-text">Inventaris</span></li>
-      <li class="menu-item">
-        <a href="#" class="menu-link">
+      <li class="menu-item {{ request()->is('administrasi/pending*') || request()->is('administrasi/receive*') ? 'active' : '' }}">
+        <a href="{{ route('administrasi.pending') }}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-package"></i>
           <div>Penerimaan Barang</div>
         </a>
       </li>
-      <li class="menu-item">
-        <a href="#" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-qr"></i>
-          <div>Label QR / Barcode</div>
+      <li class="menu-item {{ request()->is('administrasi/inventaris*') ? 'active' : '' }}">
+        <a href="{{ route('administrasi.inventaris') }}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-desktop"></i>
+          <div>Daftar Inventaris</div>
         </a>
       </li>
     @endif
@@ -90,14 +96,32 @@
     {{-- STAF LABORATORIUM --}}
     @if($role === 'staf_laboratorium')
       <li class="menu-header small text-uppercase"><span class="menu-header-text">Laboratorium</span></li>
-      <li class="menu-item">
-        <a href="#" class="menu-link">
+      <li class="menu-item {{ request()->is('laboratorium/stock-bhp*') ? 'active' : '' }}">
+        <a href="{{ route('stock-bhp.index') }}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-cabinet"></i>
           <div>Stok BHP</div>
         </a>
       </li>
-      <li class="menu-item">
-        <a href="#" class="menu-link">
+      <li class="menu-item {{ request()->is('laboratorium/bhp-pending*') ? 'active' : '' }}">
+        <a href="{{ route('bhp-pending.index') }}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-plus-circle"></i>
+          <div>Penerimaan BHP</div>
+        </a>
+      </li>
+      <li class="menu-item {{ request()->is('laboratorium/bhp-usage*') ? 'active' : '' }}">
+        <a href="{{ route('bhp-usage.create') }}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-minus-circle"></i>
+          <div>Pemakaian BHP</div>
+        </a>
+      </li>
+      <li class="menu-item {{ request()->is('laboratorium/bhp-logs*') ? 'active' : '' }}">
+        <a href="{{ route('bhp-logs.index') }}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-transfer"></i>
+          <div>Log Stok BHP</div>
+        </a>
+      </li>
+      <li class="menu-item {{ request()->is('laboratorium/maintenance*') ? 'active' : '' }}">
+        <a href="{{ route('maintenance.index') }}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-wrench"></i>
           <div>Log Maintenance</div>
         </a>

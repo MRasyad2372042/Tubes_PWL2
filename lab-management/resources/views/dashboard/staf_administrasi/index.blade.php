@@ -19,7 +19,7 @@
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <span class="fw-semibold d-block mb-1 text-muted">Menunggu Diterima</span>
-                <h3 class="card-title mb-0">0</h3>
+                <h3 class="card-title mb-0">{{ $stats['pending_count'] ?? 0 }}</h3>
               </div>
               <div class="avatar flex-shrink-0">
                 <span class="avatar-initial rounded bg-label-warning">
@@ -37,7 +37,7 @@
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <span class="fw-semibold d-block mb-1 text-muted">Sudah Diterima</span>
-                <h3 class="card-title mb-0">0</h3>
+                <h3 class="card-title mb-0">{{ $stats['received_count'] ?? 0 }}</h3>
               </div>
               <div class="avatar flex-shrink-0">
                 <span class="avatar-initial rounded bg-label-success">
@@ -55,7 +55,7 @@
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <span class="fw-semibold d-block mb-1 text-muted">Total Inventaris</span>
-                <h3 class="card-title mb-0">0</h3>
+                <h3 class="card-title mb-0">{{ $stats['total_inventory'] ?? 0 }}</h3>
               </div>
               <div class="avatar flex-shrink-0">
                 <span class="avatar-initial rounded bg-label-primary">
@@ -73,7 +73,7 @@
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <span class="fw-semibold d-block mb-1 text-muted">Label Belum Cetak</span>
-                <h3 class="card-title mb-0">0</h3>
+                <h3 class="card-title mb-0">{{ $stats['no_label'] ?? 0 }}</h3>
               </div>
               <div class="avatar flex-shrink-0">
                 <span class="avatar-initial rounded bg-label-info">
@@ -96,7 +96,7 @@
               <i class="bx bx-time text-warning me-1"></i>
               Barang Menunggu Penerimaan
             </h5>
-            <a href="#" class="btn btn-outline-primary btn-sm">Lihat Semua</a>
+            <a href="{{ route('administrasi.pending') }}" class="btn btn-outline-primary btn-sm">Lihat Semua</a>
           </div>
           <div class="card-body">
             <div class="table-responsive">
@@ -104,18 +104,27 @@
                 <thead>
                   <tr>
                     <th>Nama Barang</th>
-                    <th>Jenis</th>
                     <th>Jumlah</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
+                  @forelse($pendingItems->take(5) as $item)
                   <tr>
-                    <td colspan="4" class="text-center text-muted py-4">
+                    <td>{{ $item['item_name'] }}</td>
+                    <td>{{ $item['quantity'] }}</td>
+                    <td>
+                      <a href="{{ route('administrasi.receive', $item['id']) }}" class="btn btn-sm btn-success">Terima</a>
+                    </td>
+                  </tr>
+                  @empty
+                  <tr>
+                    <td colspan="3" class="text-center text-muted py-4">
                       <i class="bx bx-check-double fs-3 d-block mb-2 text-success"></i>
                       Semua barang sudah diterima.
                     </td>
                   </tr>
+                  @endforelse
                 </tbody>
               </table>
             </div>
@@ -130,13 +139,10 @@
             <h5 class="mb-0">Aksi Cepat</h5>
           </div>
           <div class="card-body d-flex flex-column gap-3">
-            <a href="#" class="btn btn-outline-primary w-100 text-start">
+            <a href="{{ route('administrasi.pending') }}" class="btn btn-outline-primary w-100 text-start">
               <i class="bx bx-package me-2"></i> Input Penerimaan Barang
             </a>
-            <a href="#" class="btn btn-outline-info w-100 text-start">
-              <i class="bx bx-qr-scan me-2"></i> Generate Label QR / Barcode
-            </a>
-            <a href="#" class="btn btn-outline-secondary w-100 text-start">
+            <a href="{{ route('administrasi.inventaris') }}" class="btn btn-outline-secondary w-100 text-start">
               <i class="bx bx-list-ul me-2"></i> Lihat Semua Inventaris
             </a>
           </div>
@@ -146,8 +152,9 @@
 
     {{-- Penerimaan Terbaru --}}
     <div class="card">
-      <div class="card-header">
-        <h5 class="mb-0"><i class="bx bx-history me-1"></i> Penerimaan Barang Terbaru</h5>
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bx bx-history me-1"></i> Inventaris Terbaru</h5>
+        <a href="{{ route('administrasi.inventaris') }}" class="btn btn-outline-secondary btn-sm">Lihat Semua</a>
       </div>
       <div class="card-body">
         <div class="table-responsive">
@@ -158,16 +165,30 @@
                 <th>No. Inventaris</th>
                 <th>Ruangan</th>
                 <th>Tgl Diterima</th>
-                <th>QR Label</th>
+                <th>Kondisi</th>
               </tr>
             </thead>
             <tbody>
+              @forelse($recentInventories as $inv)
+              <tr>
+                <td>{{ $inv['item_name'] }}</td>
+                <td>{{ $inv['inventory_code'] ?? '-' }}</td>
+                <td>{{ $inv['room_name'] ?? '-' }}</td>
+                <td>{{ $inv['receive_date'] ? \Carbon\Carbon::parse($inv['receive_date'])->format('d M Y') : '-' }}</td>
+                <td>
+                  <span class="badge {{ $inv['condition_status'] === 'good' ? 'bg-label-success' : 'bg-label-warning' }}">
+                    {{ ucfirst($inv['condition_status']) }}
+                  </span>
+                </td>
+              </tr>
+              @empty
               <tr>
                 <td colspan="5" class="text-center text-muted py-4">
                   <i class="bx bx-folder-open fs-3 d-block mb-2"></i>
                   Belum ada data penerimaan.
                 </td>
               </tr>
+              @endforelse
             </tbody>
           </table>
         </div>

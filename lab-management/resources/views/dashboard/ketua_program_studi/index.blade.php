@@ -19,7 +19,7 @@
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <span class="fw-semibold d-block mb-1 text-muted">Perlu Direview</span>
-                <h3 class="card-title mb-0">0</h3>
+                <h3 class="card-title mb-0">{{ $stats['needs_review'] ?? 0 }}</h3>
               </div>
               <div class="avatar flex-shrink-0">
                 <span class="avatar-initial rounded bg-label-warning">
@@ -37,7 +37,7 @@
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <span class="fw-semibold d-block mb-1 text-muted">Sudah Difinalisasi</span>
-                <h3 class="card-title mb-0">0</h3>
+                <h3 class="card-title mb-0">{{ $stats['finalized'] ?? 0 }}</h3>
               </div>
               <div class="avatar flex-shrink-0">
                 <span class="avatar-initial rounded bg-label-success">
@@ -54,16 +54,17 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
               <div>
-                <span class="fw-semibold d-block mb-1 text-muted">Total Item Disetujui</span>
-                <h3 class="card-title mb-0">0</h3>
+                <span class="fw-semibold d-block mb-1 text-muted">Aksi Cepat</span>
+                <a href="{{ route('review.index') }}" class="btn btn-sm btn-warning mt-1">
+                  <i class="bx bx-clipboard me-1"></i> Review Draf
+                </a>
               </div>
               <div class="avatar flex-shrink-0">
                 <span class="avatar-initial rounded bg-label-info">
-                  <i class="bx bx-box"></i>
+                  <i class="bx bx-check-shield"></i>
                 </span>
               </div>
             </div>
-            <small class="text-info mt-2 d-block">Dari semua draf</small>
           </div>
         </div>
       </div>
@@ -71,11 +72,12 @@
 
     {{-- Draf Menunggu Review --}}
     <div class="card mb-4">
-      <div class="card-header">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">
           <i class="bx bx-time-five text-warning me-1"></i>
           Draf Menunggu Review
         </h5>
+        <a href="{{ route('review.index') }}" class="btn btn-outline-primary btn-sm">Lihat Semua</a>
       </div>
       <div class="card-body">
         <div class="table-responsive">
@@ -91,12 +93,25 @@
               </tr>
             </thead>
             <tbody>
+              @forelse($lockedDrafts->take(5) as $index => $draft)
+              <tr>
+                <td>{{ $index + 1 }}</td>
+                <td>{{ $draft['title'] }}</td>
+                <td>{{ $draft['creator_name'] ?? '-' }}</td>
+                <td>{{ $draft['year'] }}</td>
+                <td>{{ $draft['item_count'] ?? 0 }}</td>
+                <td>
+                  <a href="{{ route('review.show', $draft['id']) }}" class="btn btn-sm btn-primary">Review</a>
+                </td>
+              </tr>
+              @empty
               <tr>
                 <td colspan="6" class="text-center text-muted py-4">
                   <i class="bx bx-check-double fs-3 d-block mb-2 text-success"></i>
                   Tidak ada draf yang perlu direview saat ini.
                 </td>
               </tr>
+              @endforelse
             </tbody>
           </table>
         </div>
@@ -105,11 +120,12 @@
 
     {{-- Riwayat Finalisasi --}}
     <div class="card">
-      <div class="card-header">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">
           <i class="bx bx-history me-1"></i>
           Riwayat Finalisasi
         </h5>
+        <a href="{{ route('review.history') }}" class="btn btn-outline-secondary btn-sm">Lihat Semua</a>
       </div>
       <div class="card-body">
         <div class="table-responsive">
@@ -120,17 +136,30 @@
                 <th>Judul Draf</th>
                 <th>Tahun</th>
                 <th>Tanggal Finalisasi</th>
-                <th>Status</th>
                 <th>Detail</th>
               </tr>
             </thead>
             <tbody>
+              @forelse($finalizedDrafts->take(5) as $index => $draft)
               <tr>
-                <td colspan="6" class="text-center text-muted py-4">
+                <td>{{ $index + 1 }}</td>
+                <td>{{ $draft['title'] }}</td>
+                <td>{{ $draft['year'] }}</td>
+                <td>{{ \Carbon\Carbon::parse($draft['updated_at'])->format('d M Y') }}</td>
+                <td>
+                  <a href="{{ route('review.history.show', $draft['id']) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bx bx-show"></i>
+                  </a>
+                </td>
+              </tr>
+              @empty
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">
                   <i class="bx bx-folder-open fs-3 d-block mb-2"></i>
                   Belum ada riwayat finalisasi.
                 </td>
               </tr>
+              @endforelse
             </tbody>
           </table>
         </div>
