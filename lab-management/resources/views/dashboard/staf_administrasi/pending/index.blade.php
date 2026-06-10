@@ -39,13 +39,17 @@
                 <td>{{ $index + 1 }}</td>
                 <td><strong>{{ $item['item_name'] }}</strong></td>
                 <td>
-                  <span class="badge bg-label-primary">Inventaris</span>
+                  @if(isset($item['item_type']) && $item['item_type'] === 'bhp')
+                    <span class="badge bg-label-warning">BHP</span>
+                  @else
+                    <span class="badge bg-label-primary">Inventaris</span>
+                  @endif
                 </td>
                 <td>{{ $item['quantity'] }}</td>
-                <td>Rp {{ number_format($item['estimated_price'], 0, ',', '.') }}</td>
+                <td>Rp {{ number_format($item['estimated_price'] ?? 0, 0, ',', '.') }}</td>
                 <td>{{ $item['draft_title'] ?? '-' }} ({{ $item['draft_year'] ?? '-' }})</td>
                 <td>
-                  <a href="{{ route('administrasi.receive', $item['id']) }}" class="btn btn-sm btn-success">
+                  <a href="{{ route('administrasi.receive', $item['procurement_item_id'] ?? $item['id']) }}" class="btn btn-sm btn-success">
                     <i class="bx bx-package me-1"></i> Terima
                   </a>
                 </td>

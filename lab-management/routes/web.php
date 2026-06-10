@@ -53,6 +53,7 @@ Route::resource('users', UserPageController::class)->middleware(['auth', 'role:a
 Route::resource('rooms', RoomPageController::class)->middleware(['auth', 'role:administrator']);
 
 Route::prefix('laboratorium')->middleware(['auth', 'role:staf_laboratorium'])->group(function () {
+    Route::get('/inventaris', [StafLaboratoriumController::class, 'inventoryIndex'])->name('laboratorium.inventaris');
     Route::get('/stock-bhp', [StafLaboratoriumController::class, 'bhpIndex'])->name('stock-bhp.index');
     Route::get('/stock-bhp/create', [StafLaboratoriumController::class, 'bhpCreate'])->name('stock-bhp.create');
     Route::post('/stock-bhp', [StafLaboratoriumController::class, 'bhpStore'])->name('stock-bhp.store');
@@ -62,10 +63,6 @@ Route::prefix('laboratorium')->middleware(['auth', 'role:staf_laboratorium'])->g
     Route::get('/maintenance', [StafLaboratoriumController::class, 'maintenanceIndex'])->name('maintenance.index');
     Route::get('/maintenance/create', [StafLaboratoriumController::class, 'maintenanceCreate'])->name('maintenance.create');
     Route::post('/maintenance', [StafLaboratoriumController::class, 'maintenanceStore'])->name('maintenance.store');
-
-    // BHP Procurement Receiving
-    Route::get('/bhp-pending', [StafLaboratoriumController::class, 'bhpPendingIndex'])->name('bhp-pending.index');
-    Route::post('/bhp-receive', [StafLaboratoriumController::class, 'bhpReceiveStore'])->name('bhp-receive.store');
 
     // BHP Usage
     Route::get('/bhp-usage', [StafLaboratoriumController::class, 'bhpUsageCreate'])->name('bhp-usage.create');

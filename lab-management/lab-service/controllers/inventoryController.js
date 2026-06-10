@@ -9,16 +9,23 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // GET /api/inventories/pending
-// Items: type=inventory, approved_status=approved, from finalized drafts, NOT yet in inventories
+// Items: approved_status=approved, from finalized drafts, NOT yet in inventories or bhp_items
 exports.pendingItems = (req, res) => {
     const query = `
-        SELECT pi.*, pd.title AS draft_title, pd.year AS draft_year
+        SELECT pi.id AS procurement_item_id,
+               pi.item_type,
+               pi.item_name,
+               pi.quantity,
+               pd.title AS draft_title, pd.year AS draft_year
         FROM procurement_items pi
         JOIN procurement_drafts pd ON pd.id = pi.draft_id
-        WHERE pi.item_type = 'inventory'
-          AND pi.approved_status = 'approved'
+        WHERE pi.approved_status = 'approved'
           AND pd.status = 'finalized'
-          AND pi.id NOT IN (SELECT procurement_item_id FROM inventories WHERE procurement_item_id IS NOT NULL)
+          AND (
+              (pi.item_type = 'inventory' AND pi.id NOT IN (SELECT procurement_item_id FROM inventories WHERE procurement_item_id IS NOT NULL))
+              OR
+              (pi.item_type = 'bhp' AND pi.id NOT IN (SELECT procurement_item_id FROM bhp_items WHERE procurement_item_id IS NOT NULL))
+          )
         ORDER BY pd.year DESC, pi.item_name ASC
     `;
     db.query(query, (err, results) => {
@@ -46,39 +53,53 @@ exports.index = (req, res) => {
 exports.receiveItem = (req, res) => {
     const {
         procurement_item_id,
+        item_type,
         item_name,
         inventory_code,
         receive_date,
         room_id,
+        initial_stock,
+        unit
     } = req.body;
 
     if (!item_name || !receive_date) {
         return res.status(422).json({ error: 'item_name dan receive_date wajib diisi.' });
     }
 
-    const qr_code_path = req.files && req.files['qr_code'] ? '/uploads/' + req.files['qr_code'][0].filename : null;
-    const barcode_path = req.files && req.files['barcode'] ? '/uploads/' + req.files['barcode'][0].filename : null;
-    const photo_path = req.files && req.files['photo'] ? '/uploads/' + req.files['photo'][0].filename : null;
+    if (item_type === 'bhp') {
+        db.query(
+            `INSERT INTO bhp_items (procurement_item_id, item_name, stock, unit, receive_date) VALUES (?, ?, ?, ?, ?)`,
+            [procurement_item_id || null, item_name, initial_stock || 0, unit || 'pcs', receive_date],
+            (err, result) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ message: 'BHP berhasil diterima.', id: result.insertId });
+            }
+        );
+    } else {
+        const qr_code_path = req.files && req.files['qr_code'] ? '/uploads/' + req.files['qr_code'][0].filename : null;
+        const barcode_path = req.files && req.files['barcode'] ? '/uploads/' + req.files['barcode'][0].filename : null;
+        const photo_path = req.files && req.files['photo'] ? '/uploads/' + req.files['photo'][0].filename : null;
 
-    db.query(
-        `INSERT INTO inventories
-         (procurement_item_id, item_name, inventory_code, receive_date, room_id, condition_status, qr_code_path, barcode_path, photo_path)
-         VALUES (?, ?, ?, ?, ?, 'good', ?, ?, ?)`,
-        [
-            procurement_item_id || null,
-            item_name,
-            inventory_code || null,
-            receive_date,
-            room_id || null,
-            qr_code_path,
-            barcode_path,
-            photo_path,
-        ],
-        (err, result) => {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ message: 'Inventaris berhasil diterima.', id: result.insertId });
-        }
-    );
+        db.query(
+            `INSERT INTO inventories
+             (procurement_item_id, item_name, inventory_code, receive_date, room_id, condition_status, qr_code_path, barcode_path, photo_path)
+             VALUES (?, ?, ?, ?, ?, 'good', ?, ?, ?)`,
+            [
+                procurement_item_id || null,
+                item_name,
+                inventory_code || null,
+                receive_date,
+                room_id || null,
+                qr_code_path,
+                barcode_path,
+                photo_path,
+            ],
+            (err, result) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ message: 'Inventaris berhasil diterima.', id: result.insertId });
+            }
+        );
+    }
 };
 
 // PUT /api/inventories/:id

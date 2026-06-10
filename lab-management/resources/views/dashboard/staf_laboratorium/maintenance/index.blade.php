@@ -15,27 +15,31 @@
                         <tr>
                             <th>Tanggal</th>
                             <th>Inventaris</th>
-                            <th>Kondisi</th>
-                            <th>BHP</th>
-                            <th>Jumlah</th>
-                            <th>Diganti Dengan</th>
-                            <th>Diganti Oleh</th>
+                            <th>Kondisi (Sebelum &rarr; Sesudah)</th>
+                            <th>BHP yang Digunakan</th>
+                            <th>Dilakukan Oleh</th>
+                            <th>Catatan</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($maintenanceLogs as $log)
                             <tr>
-                                <td>{{ $log['maintenance_date'] ?? '—' }}</td>
-                                <td>{{ $log['inventory_item'] ?? '—' }}</td>
-                                <td>{{ $log['condition'] ?? '—' }}</td>
-                                <td>{{ $log['bhp_name'] ?? '—' }}</td>
-                                <td>{{ $log['bhp_used'] ?? 0 }}</td>
-                                <td>{{ $log['replacement_item'] ?? '—' }}</td>
-                                <td>{{ $log['replaced_by'] ?? '—' }}</td>
+                                <td>{{ date('d M Y', strtotime($log['maintenance_date'] ?? 'now')) }}</td>
+                                <td>
+                                    <strong>{{ $log['inventory_item_name'] ?? '—' }}</strong><br>
+                                    <small class="text-muted">{{ $log['inventory_code'] ?? 'Tanpa Kode' }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ ucfirst($log['condition_before'] ?? '') }}</span> &rarr;
+                                    <span class="badge bg-primary">{{ ucfirst($log['condition_after'] ?? '') }}</span>
+                                </td>
+                                <td>{{ $log['bhp_used_info'] ?? '—' }}</td>
+                                <td>{{ $log['performed_by_name'] ?? 'Sistem' }}</td>
+                                <td>{{ $log['notes'] ?? '—' }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center">Belum ada catatan pemeliharaan.</td>
+                                <td colspan="6" class="text-center">Belum ada catatan pemeliharaan.</td>
                             </tr>
                         @endforelse
                     </tbody>

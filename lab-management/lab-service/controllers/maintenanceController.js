@@ -3,18 +3,20 @@ const db = require('../config/db');
 exports.index = (req, res) => {
     const query = `
         SELECT m.id,
-               m.inventory_item,
-               m.condition,
-               m.replacement_item,
-               m.replaced_by,
-               m.bhp_item_id,
-               m.bhp_used,
                m.maintenance_date,
+               m.condition_before,
+               m.condition_after,
                m.notes,
-               b.name AS bhp_name,
-               b.unit AS bhp_unit
-        FROM maintenance_logs m
-        LEFT JOIN bhp_items b ON b.id = m.bhp_item_id
+               i.item_name AS inventory_item_name,
+               i.inventory_code,
+               u.name AS performed_by_name,
+               GROUP_CONCAT(CONCAT(b.name, ' (', bu.quantity_used, ' ', b.unit, ')') SEPARATOR ', ') AS bhp_used_info
+        FROM inventory_maintenances m
+        JOIN inventories i ON i.id = m.inventory_id
+        LEFT JOIN users u ON u.id = m.performed_by
+        LEFT JOIN maintenance_bhp_usages bu ON bu.maintenance_id = m.id
+        LEFT JOIN bhp_items b ON b.id = bu.bhp_item_id
+        GROUP BY m.id
         ORDER BY m.maintenance_date DESC, m.id DESC
     `;
 
@@ -26,57 +28,82 @@ exports.index = (req, res) => {
 
 exports.store = (req, res) => {
     const {
-        inventory_item,
-        condition,
-        replacement_item,
-        replaced_by,
+        inventory_id,
+        condition_before,
+        condition_after,
         bhp_item_id,
         bhp_used = 0,
         maintenance_date,
         notes,
+        performed_by
     } = req.body;
 
-    if (!inventory_item || !condition || !maintenance_date) {
-        return res.status(422).json({ error: 'Inventaris, kondisi, dan tanggal diperlukan.' });
+    if (!inventory_id || !condition_before || !condition_after || !maintenance_date) {
+        return res.status(422).json({ error: 'Inventaris, kondisi sebelum/sesudah, dan tanggal diperlukan.' });
     }
 
-    const insertLog = (callback) => {
+    db.beginTransaction((err) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        // 1. Insert into inventory_maintenances
         db.query(
-            'INSERT INTO maintenance_logs (inventory_item, condition, replacement_item, replaced_by, bhp_item_id, bhp_used, maintenance_date, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [inventory_item, condition, replacement_item, replaced_by, bhp_item_id, bhp_used, maintenance_date, notes],
-            (err) => {
-                if (err) return res.status(500).json({ error: err.message });
-                callback();
-            }
-        );
-    };
+            'INSERT INTO inventory_maintenances (inventory_id, condition_before, condition_after, maintenance_date, notes, performed_by) VALUES (?, ?, ?, ?, ?, ?)',
+            [inventory_id, condition_before, condition_after, maintenance_date, notes, performed_by || null],
+            (err, result) => {
+                if (err) return db.rollback(() => res.status(500).json({ error: err.message }));
+                
+                const maintenanceId = result.insertId;
 
-    if (bhp_item_id && bhp_used > 0) {
-        db.query('SELECT stock FROM bhp_items WHERE id = ?', [bhp_item_id], (err, rows) => {
-            if (err) return res.status(500).json({ error: err.message });
-            if (!rows.length) {
-                return res.status(404).json({ error: 'Item BHP tidak ditemukan.' });
-            }
-
-            const currentStock = rows[0].stock;
-            if (currentStock < bhp_used) {
-                return res.status(422).json({ error: 'Stok BHP tidak mencukupi untuk penggunaan ini.' });
-            }
-
-            insertLog(() => {
+                // 2. Update inventories condition
                 db.query(
-                    'UPDATE bhp_items SET stock = GREATEST(stock - ?, 0) WHERE id = ?',
-                    [bhp_used, bhp_item_id],
+                    'UPDATE inventories SET condition_status = ? WHERE id = ?',
+                    [condition_after, inventory_id],
                     (err) => {
-                        if (err) return res.status(500).json({ error: err.message });
-                        res.json({ message: 'Maintenance log created' });
+                        if (err) return db.rollback(() => res.status(500).json({ error: err.message }));
+
+                        // 3. Handle BHP usage if provided
+                        if (bhp_item_id && bhp_used > 0) {
+                            db.query('SELECT stock FROM bhp_items WHERE id = ? FOR UPDATE', [bhp_item_id], (err, rows) => {
+                                if (err) return db.rollback(() => res.status(500).json({ error: err.message }));
+                                if (!rows.length) {
+                                    return db.rollback(() => res.status(404).json({ error: 'Item BHP tidak ditemukan.' }));
+                                }
+
+                                const currentStock = rows[0].stock;
+                                if (currentStock < bhp_used) {
+                                    return db.rollback(() => res.status(422).json({ error: 'Stok BHP tidak mencukupi untuk penggunaan ini.' }));
+                                }
+
+                                db.query(
+                                    'UPDATE bhp_items SET stock = stock - ? WHERE id = ?',
+                                    [bhp_used, bhp_item_id],
+                                    (err) => {
+                                        if (err) return db.rollback(() => res.status(500).json({ error: err.message }));
+
+                                        db.query(
+                                            'INSERT INTO maintenance_bhp_usages (maintenance_id, bhp_item_id, quantity_used) VALUES (?, ?, ?)',
+                                            [maintenanceId, bhp_item_id, bhp_used],
+                                            (err) => {
+                                                if (err) return db.rollback(() => res.status(500).json({ error: err.message }));
+
+                                                db.commit((err) => {
+                                                    if (err) return db.rollback(() => res.status(500).json({ error: err.message }));
+                                                    res.json({ message: 'Maintenance log created successfully with BHP usage' });
+                                                });
+                                            }
+                                        );
+                                    }
+                                );
+                            });
+                        } else {
+                            db.commit((err) => {
+                                if (err) return db.rollback(() => res.status(500).json({ error: err.message }));
+                                res.json({ message: 'Maintenance log created successfully' });
+                            });
+                        }
                     }
                 );
-            });
-        });
-    } else {
-        insertLog(() => {
-            res.json({ message: 'Maintenance log created' });
-        });
-    }
+            }
+        );
+    });
 };

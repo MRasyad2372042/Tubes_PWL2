@@ -96,18 +96,19 @@
     {{-- STAF LABORATORIUM --}}
     @if($role === 'staf_laboratorium')
       <li class="menu-header small text-uppercase"><span class="menu-header-text">Laboratorium</span></li>
+      <li class="menu-item {{ request()->is('laboratorium/inventaris*') ? 'active' : '' }}">
+        <a href="{{ route('laboratorium.inventaris') }}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-desktop"></i>
+          <div>Daftar Inventaris</div>
+        </a>
+      </li>
       <li class="menu-item {{ request()->is('laboratorium/stock-bhp*') ? 'active' : '' }}">
         <a href="{{ route('stock-bhp.index') }}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-cabinet"></i>
           <div>Stok BHP</div>
         </a>
       </li>
-      <li class="menu-item {{ request()->is('laboratorium/bhp-pending*') ? 'active' : '' }}">
-        <a href="{{ route('bhp-pending.index') }}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-plus-circle"></i>
-          <div>Penerimaan BHP</div>
-        </a>
-      </li>
+
       <li class="menu-item {{ request()->is('laboratorium/bhp-usage*') ? 'active' : '' }}">
         <a href="{{ route('bhp-usage.create') }}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-minus-circle"></i>

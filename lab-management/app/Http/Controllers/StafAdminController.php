@@ -31,7 +31,7 @@ class StafAdminController extends Controller
         // Get item details from pending
         $response = Http::get("{$this->apiBase}/inventories/pending");
         $items = $response->successful() ? $response->json() : [];
-        $item = collect($items)->firstWhere('id', (int) $id);
+        $item = collect($items)->firstWhere('procurement_item_id', (int) $id);
 
         if (! $item) {
             return redirect()->route('administrasi.pending')
@@ -52,31 +52,44 @@ class StafAdminController extends Controller
     public function receiveStore(Request $request, $id)
     {
         $request->validate([
+            'item_type' => 'required|in:inventory,bhp',
             'item_name' => 'required|string|max:255',
-            'inventory_code' => 'nullable|string|max:100',
             'receive_date' => 'required|date',
+            // fields for inventory
+            'inventory_code' => 'nullable|string|max:100',
             'room_id' => 'nullable|integer',
             'qr_code' => 'nullable|image|max:5120',
             'barcode' => 'nullable|image|max:5120',
             'photo' => 'nullable|image|max:5120',
+            // fields for bhp
+            'unit' => 'nullable|string|max:50',
+            'initial_stock' => 'nullable|integer|min:0',
         ]);
 
         // Build multipart request to Node.js API
         $http = Http::asMultipart();
-
         $http = $http->attach('', '', ''); // Initialize
-
         $multipart = [];
 
         $multipart[] = ['name' => 'procurement_item_id', 'contents' => (string) $id];
+        $multipart[] = ['name' => 'item_type', 'contents' => $request->item_type];
         $multipart[] = ['name' => 'item_name', 'contents' => $request->item_name];
         $multipart[] = ['name' => 'receive_date', 'contents' => $request->receive_date];
 
-        if ($request->inventory_code) {
-            $multipart[] = ['name' => 'inventory_code', 'contents' => $request->inventory_code];
-        }
-        if ($request->room_id) {
-            $multipart[] = ['name' => 'room_id', 'contents' => (string) $request->room_id];
+        if ($request->item_type === 'inventory') {
+            if ($request->inventory_code) {
+                $multipart[] = ['name' => 'inventory_code', 'contents' => $request->inventory_code];
+            }
+            if ($request->room_id) {
+                $multipart[] = ['name' => 'room_id', 'contents' => (string) $request->room_id];
+            }
+        } elseif ($request->item_type === 'bhp') {
+            if ($request->unit) {
+                $multipart[] = ['name' => 'unit', 'contents' => $request->unit];
+            }
+            if ($request->initial_stock !== null) {
+                $multipart[] = ['name' => 'initial_stock', 'contents' => (string) $request->initial_stock];
+            }
         }
 
         if ($request->hasFile('qr_code')) {
@@ -121,10 +134,13 @@ class StafAdminController extends Controller
 
     public function inventoryIndex()
     {
-        $response = Http::get("{$this->apiBase}/inventories");
-        $inventories = $response->successful() ? $response->json() : [];
+        $invResponse = Http::get("{$this->apiBase}/inventories");
+        $inventories = $invResponse->successful() ? $invResponse->json() : [];
 
-        return view('dashboard.staf_administrasi.inventaris.index', compact('inventories'));
+        $bhpResponse = Http::get("{$this->apiBase}/bhp");
+        $bhpItems = $bhpResponse->successful() ? $bhpResponse->json() : [];
+
+        return view('dashboard.staf_administrasi.inventaris.index', compact('inventories', 'bhpItems'));
     }
 
     // ========================

@@ -24,7 +24,7 @@ class StafLaboratoriumController extends Controller
         $totals = [
             'total_bhp' => $bhpItems ? count($bhpItems) : 0,
             'critical_count' => $criticalItems->count(),
-            'total_inventory' => collect($maintenanceLogs)->pluck('inventory_item')->unique()->count(),
+            'total_inventory' => collect($maintenanceLogs)->pluck('inventory_id')->unique()->count(),
             'maintenance_count' => $maintenanceLogs ? count($maintenanceLogs) : 0,
         ];
 
@@ -104,31 +104,33 @@ class StafLaboratoriumController extends Controller
         $response = Http::get("{$this->apiBase}/bhp");
         $bhpItems = $response->successful() ? $response->json() : [];
 
-        return view('dashboard.staf_laboratorium.maintenance.create', compact('bhpItems'));
+        $invResponse = Http::get("{$this->apiBase}/inventories");
+        $inventories = $invResponse->successful() ? $invResponse->json() : [];
+
+        return view('dashboard.staf_laboratorium.maintenance.create', compact('bhpItems', 'inventories'));
     }
 
     public function maintenanceStore(Request $request)
     {
         $request->validate([
-            'inventory_item' => 'required|string|max:255',
+            'inventory_id' => 'required|integer',
             'maintenance_date' => 'required|date',
-            'condition' => 'required|string|max:100',
-            'replacement_item' => 'nullable|string|max:255',
-            'replaced_by' => 'nullable|string|max:255',
+            'condition_before' => 'required|string|max:100',
+            'condition_after' => 'required|string|max:100',
             'bhp_item_id' => 'nullable|integer',
             'bhp_used' => 'nullable|integer|min:0',
             'notes' => 'nullable|string|max:1000',
         ]);
 
         $response = Http::post("{$this->apiBase}/maintenance", [
-            'inventory_item' => $request->inventory_item,
+            'inventory_id' => $request->inventory_id,
             'maintenance_date' => $request->maintenance_date,
-            'condition' => $request->condition,
-            'replacement_item' => $request->replacement_item,
-            'replaced_by' => $request->replaced_by,
+            'condition_before' => $request->condition_before,
+            'condition_after' => $request->condition_after,
             'bhp_item_id' => $request->bhp_item_id,
             'bhp_used' => $request->bhp_used ?? 0,
             'notes' => $request->notes,
+            'performed_by' => auth()->id(),
         ]);
 
         if ($response->successful()) {
@@ -140,40 +142,14 @@ class StafLaboratoriumController extends Controller
     }
 
     // ========================
-    // BHP PROCUREMENT RECEIVING
+    // INVENTARIS LIST
     // ========================
-
-    public function bhpPendingIndex()
+    public function inventoryIndex()
     {
-        $response = Http::get("{$this->apiBase}/bhp-stock/pending");
-        $pendingItems = $response->successful() ? $response->json() : [];
+        $response = Http::get("{$this->apiBase}/inventories");
+        $inventories = $response->successful() ? $response->json() : [];
 
-        return view('dashboard.staf_laboratorium.bhp.pending', compact('pendingItems'));
-    }
-
-    public function bhpReceiveStore(Request $request)
-    {
-        $request->validate([
-            'procurement_item_id' => 'nullable|integer',
-            'item_name' => 'required|string|max:255',
-            'unit' => 'required|string|max:50',
-            'initial_stock' => 'required|integer|min:0',
-        ]);
-
-        $response = Http::post("{$this->apiBase}/bhp-stock/receive", [
-            'procurement_item_id' => $request->procurement_item_id,
-            'item_name' => $request->item_name,
-            'unit' => $request->unit,
-            'initial_stock' => $request->initial_stock,
-            'created_by' => auth()->id(),
-        ]);
-
-        if ($response->successful()) {
-            return redirect()->route('bhp-pending.index')->with('success', 'BHP berhasil diterima ke stok.');
-        }
-
-        $message = $response->json('error') ?: 'Gagal menerima BHP. Silakan coba lagi.';
-        return redirect()->route('bhp-pending.index')->with('error', $message)->withInput();
+        return view('dashboard.staf_laboratorium.inventaris.index', compact('inventories'));
     }
 
     // ========================

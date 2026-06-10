@@ -44,7 +44,7 @@
               <input type="hidden" name="item_name" value="{{ $item['item_name'] }}">
 
               <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-12 mb-3">
                   <label for="receive_date" class="form-label">Tanggal Penerimaan <span class="text-danger">*</span></label>
                   <input type="date" name="receive_date" id="receive_date" class="form-control @error('receive_date') is-invalid @enderror"
                          value="{{ old('receive_date', date('Y-m-d')) }}" required>
@@ -52,7 +52,11 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
                 </div>
-                <div class="col-md-6 mb-3">
+              </div>
+
+              @if($item['item_type'] === 'inventory')
+                <input type="hidden" name="item_type" value="inventory">
+                <div class="mb-3">
                   <label for="inventory_code" class="form-label">Nomor Label / Kode Inventaris</label>
                   <input type="text" name="inventory_code" id="inventory_code" class="form-control @error('inventory_code') is-invalid @enderror"
                          value="{{ old('inventory_code') }}" placeholder="Contoh: INV-2026-001">
@@ -60,49 +64,50 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
                 </div>
-              </div>
 
-              <div class="mb-3">
-                <label for="room_id" class="form-label">Ruangan Penempatan</label>
-                <select name="room_id" id="room_id" class="form-select">
-                  <option value="">Pilih ruangan (opsional)</option>
-                  @foreach($rooms as $room)
-                    <option value="{{ $room['id'] }}" {{ old('room_id') == $room['id'] ? 'selected' : '' }}>
-                      {{ $room['name'] }} — {{ $room['location'] ?? '' }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
+                <div class="mb-3">
+                  <label for="room_id" class="form-label">Ruangan Penempatan</label>
+                  <select name="room_id" id="room_id" class="form-select">
+                    <option value="">Pilih ruangan (opsional)</option>
+                    @foreach($rooms ?? [] as $room)
+                      <option value="{{ $room['id'] }}" {{ old('room_id') == $room['id'] ? 'selected' : '' }}>
+                        {{ $room['name'] }} — {{ $room['location'] ?? '' }}
+                      </option>
+                    @endforeach
+                  </select>
+                </div>
 
-              <div class="row">
-                <div class="col-md-4 mb-3">
-                  <label for="qr_code" class="form-label">Foto QR Code</label>
-                  <input type="file" name="qr_code" id="qr_code" class="form-control @error('qr_code') is-invalid @enderror"
-                         accept="image/*">
-                  @error('qr_code')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                  @enderror
-                  <small class="text-muted">Max 5MB, format gambar</small>
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label for="qr_code" class="form-label">Foto QR Code</label>
+                    <input type="file" name="qr_code" id="qr_code" class="form-control @error('qr_code') is-invalid @enderror" accept="image/*">
+                    <small class="text-muted">Max 5MB</small>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="barcode" class="form-label">Foto Barcode</label>
+                    <input type="file" name="barcode" id="barcode" class="form-control @error('barcode') is-invalid @enderror" accept="image/*">
+                    <small class="text-muted">Max 5MB</small>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="photo" class="form-label">Foto Barang</label>
+                    <input type="file" name="photo" id="photo" class="form-control @error('photo') is-invalid @enderror" accept="image/*">
+                    <small class="text-muted">Max 5MB</small>
+                  </div>
                 </div>
-                <div class="col-md-4 mb-3">
-                  <label for="barcode" class="form-label">Foto Barcode</label>
-                  <input type="file" name="barcode" id="barcode" class="form-control @error('barcode') is-invalid @enderror"
-                         accept="image/*">
-                  @error('barcode')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                  @enderror
-                  <small class="text-muted">Max 5MB, format gambar</small>
+
+              @elseif($item['item_type'] === 'bhp')
+                <input type="hidden" name="item_type" value="bhp">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="initial_stock" class="form-label">Stok Awal <span class="text-danger">*</span></label>
+                    <input type="number" name="initial_stock" id="initial_stock" class="form-control" value="{{ old('initial_stock', $item['quantity']) }}" required min="0">
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="unit" class="form-label">Satuan <span class="text-danger">*</span></label>
+                    <input type="text" name="unit" id="unit" class="form-control" value="{{ old('unit', 'pcs') }}" placeholder="Contoh: pcs, kotak, botol" required>
+                  </div>
                 </div>
-                <div class="col-md-4 mb-3">
-                  <label for="photo" class="form-label">Foto Barang</label>
-                  <input type="file" name="photo" id="photo" class="form-control @error('photo') is-invalid @enderror"
-                         accept="image/*">
-                  @error('photo')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                  @enderror
-                  <small class="text-muted">Max 5MB, format gambar</small>
-                </div>
-              </div>
+              @endif
 
               <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-success">
