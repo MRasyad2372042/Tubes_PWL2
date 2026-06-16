@@ -91,6 +91,9 @@
                         <i class="bx bx-image"></i>
                       </a>
                     @endif
+                    <button type="button" class="btn btn-sm btn-outline-warning edit-inventory-btn" data-id="{{ $inv['id'] }}" title="Edit">
+                      <i class="bx bx-edit"></i>
+                    </button>
                   </td>
                 </tr>
                 @empty
@@ -153,4 +156,162 @@
 
   </div>
 </div>
+
+<!-- Modal Edit Inventaris -->
+<div class="modal fade" id="editInventoryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Update Inventaris</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="editInventoryForm" enctype="multipart/form-data">
+        <div class="modal-body">
+          <input type="hidden" id="inventoryId" name="id">
+
+          <!-- Inventory Code -->
+          <div class="mb-3">
+            <label class="form-label" for="inventoryCode">Kode Inventaris <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="inventoryCode" name="inventory_code" placeholder="Contoh: INV-001" required>
+            <small class="text-muted">QR Code akan dibuat otomatis dari kode ini</small>
+          </div>
+
+          <!-- Condition Status -->
+          <div class="mb-3">
+            <label class="form-label" for="conditionStatus">Kondisi Barang</label>
+            <select class="form-select" id="conditionStatus" name="condition_status">
+              <option value="good">Baik</option>
+              <option value="maintenance">Memerlukan Perbaikan</option>
+              <option value="damaged">Rusak</option>
+              <option value="disposed">Dipbuang</option>
+              <option value="replaced">Diganti</option>
+            </select>
+          </div>
+
+          <!-- Barcode Upload -->
+          <div class="mb-3">
+            <label class="form-label" for="barcodeUpload">Upload Barcode (Opsional)</label>
+            <input type="file" class="form-control" id="barcodeUpload" name="barcode" accept="image/*">
+            <small class="text-muted">Format: JPG, PNG, GIF, WEBP. Max 5MB</small>
+            <div id="barcodePreview" class="mt-2"></div>
+          </div>
+
+          <!-- Photo Upload -->
+          <div class="mb-3">
+            <label class="form-label" for="photoUpload">Upload Foto (Opsional)</label>
+            <input type="file" class="form-control" id="photoUpload" name="photo" accept="image/*">
+            <small class="text-muted">Format: JPG, PNG, GIF, WEBP. Max 5MB</small>
+            <div id="photoPreview" class="mt-2"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const editModal = new bootstrap.Modal(document.getElementById('editInventoryModal'));
+  const editForm = document.getElementById('editInventoryForm');
+
+  // Handle edit button click
+  document.querySelectorAll('.edit-inventory-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const inventoryId = this.getAttribute('data-id');
+      const row = this.closest('tr');
+      
+      // Get item name from row
+      const itemName = row.cells[1].textContent.trim();
+      
+      // Set modal title with item name
+      document.querySelector('#editInventoryModal .modal-title').textContent = 
+        `Update Inventaris - ${itemName}`;
+      
+      // Set inventory ID
+      document.getElementById('inventoryId').value = inventoryId;
+      
+      // Clear form
+      editForm.reset();
+      document.getElementById('barcodePreview').innerHTML = '';
+      document.getElementById('photoPreview').innerHTML = '';
+      
+      editModal.show();
+    });
+  });
+
+  // Handle file preview
+  function setupFilePreview(inputId, previewId) {
+    document.getElementById(inputId).addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const previewDiv = document.getElementById(previewId);
+      previewDiv.innerHTML = '';
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const img = document.createElement('img');
+          img.src = event.target.result;
+          img.style.maxWidth = '150px';
+          img.style.maxHeight = '150px';
+          img.className = 'rounded border';
+          previewDiv.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  setupFilePreview('barcodeUpload', 'barcodePreview');
+  setupFilePreview('photoUpload', 'photoPreview');
+
+  // Handle form submission
+  editForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const inventoryId = document.getElementById('inventoryId').value;
+    const formData = new FormData(editForm);
+    
+    // Remove the hidden id field from formData
+    formData.delete('id');
+
+    fetch(`http://localhost:3000/api/inventories/${inventoryId}`, {
+      method: 'PUT',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message) {
+        // Show success message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+        alertDiv.innerHTML = `
+          <strong>Berhasil!</strong> ${data.message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.content-wrapper').prepend(alertDiv);
+
+        // Close modal
+        editModal.hide();
+
+        // Reload page after 1 second
+        setTimeout(() => location.reload(), 1000);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+      alertDiv.innerHTML = `
+        <strong>Error!</strong> Terjadi kesalahan saat memperbarui data.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.querySelector('.content-wrapper').prepend(alertDiv);
+    });
+  });
+});
+</script>
 @endsection

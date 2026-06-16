@@ -60,6 +60,9 @@
                   <label for="inventory_code" class="form-label">Nomor Label / Kode Inventaris</label>
                   <input type="text" name="inventory_code" id="inventory_code" class="form-control @error('inventory_code') is-invalid @enderror"
                          value="{{ old('inventory_code') }}" placeholder="Contoh: INV-2026-001">
+                  <small class="text-muted d-block mt-1">
+                    <i class="bx bx-info-circle"></i> QR Code akan dibuat otomatis dari kode ini
+                  </small>
                   @error('inventory_code')
                     <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -78,18 +81,13 @@
                 </div>
 
                 <div class="row">
-                  <div class="col-md-4 mb-3">
-                    <label for="qr_code" class="form-label">Foto QR Code</label>
-                    <input type="file" name="qr_code" id="qr_code" class="form-control @error('qr_code') is-invalid @enderror" accept="image/*">
-                    <small class="text-muted">Max 5MB</small>
-                  </div>
-                  <div class="col-md-4 mb-3">
-                    <label for="barcode" class="form-label">Foto Barcode</label>
+                  <div class="col-md-6 mb-3">
+                    <label for="barcode" class="form-label">Foto Barcode (Opsional)</label>
                     <input type="file" name="barcode" id="barcode" class="form-control @error('barcode') is-invalid @enderror" accept="image/*">
                     <small class="text-muted">Max 5MB</small>
                   </div>
-                  <div class="col-md-4 mb-3">
-                    <label for="photo" class="form-label">Foto Barang</label>
+                  <div class="col-md-6 mb-3">
+                    <label for="photo" class="form-label">Foto Barang (Opsional)</label>
                     <input type="file" name="photo" id="photo" class="form-control @error('photo') is-invalid @enderror" accept="image/*">
                     <small class="text-muted">Max 5MB</small>
                   </div>

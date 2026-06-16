@@ -1,12 +1,31 @@
 const db = require('../config/db');
 const path = require('path');
 const fs = require('fs');
+const QRCode = require('qrcode');
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
+
+// Helper function to generate QR code
+const generateQRCode = async (data) => {
+    try {
+        const filename = Date.now() + '-' + Math.round(Math.random() * 1E9) + '.png';
+        const filepath = path.join(uploadDir, filename);
+        await QRCode.toFile(filepath, data, {
+            errorCorrectionLevel: 'H',
+            type: 'image/png',
+            width: 300,
+            margin: 2,
+        });
+        return '/uploads/' + filename;
+    } catch (error) {
+        console.error('QR Code generation error:', error);
+        return null;
+    }
+};
 
 // GET /api/inventories/pending
 // Items: approved_status=approved, from finalized drafts, NOT yet in inventories or bhp_items
@@ -49,8 +68,8 @@ exports.index = (req, res) => {
 };
 
 // POST /api/inventories/receive
-// Expects multipart form data with fields + files (qr_code, photo)
-exports.receiveItem = (req, res) => {
+// Expects multipart form data with fields + files (photo)
+exports.receiveItem = async (req, res) => {
     const {
         procurement_item_id,
         item_type,
@@ -76,60 +95,78 @@ exports.receiveItem = (req, res) => {
             }
         );
     } else {
-        const qr_code_path = req.files && req.files['qr_code'] ? '/uploads/' + req.files['qr_code'][0].filename : null;
-        const barcode_path = req.files && req.files['barcode'] ? '/uploads/' + req.files['barcode'][0].filename : null;
-        const photo_path = req.files && req.files['photo'] ? '/uploads/' + req.files['photo'][0].filename : null;
-
-        db.query(
-            `INSERT INTO inventories
-             (procurement_item_id, item_name, inventory_code, receive_date, room_id, condition_status, qr_code_path, barcode_path, photo_path)
-             VALUES (?, ?, ?, ?, ?, 'good', ?, ?, ?)`,
-            [
-                procurement_item_id || null,
-                item_name,
-                inventory_code || null,
-                receive_date,
-                room_id || null,
-                qr_code_path,
-                barcode_path,
-                photo_path,
-            ],
-            (err, result) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json({ message: 'Inventaris berhasil diterima.', id: result.insertId });
+        try {
+            // Generate QR code if inventory_code is provided
+            let qr_code_path = null;
+            if (inventory_code) {
+                qr_code_path = await generateQRCode(inventory_code);
             }
-        );
+
+            const barcode_path = req.files && req.files['barcode'] ? '/uploads/' + req.files['barcode'][0].filename : null;
+            const photo_path = req.files && req.files['photo'] ? '/uploads/' + req.files['photo'][0].filename : null;
+
+            db.query(
+                `INSERT INTO inventories
+                 (procurement_item_id, item_name, inventory_code, receive_date, room_id, condition_status, qr_code_path, barcode_path, photo_path)
+                 VALUES (?, ?, ?, ?, ?, 'good', ?, ?, ?)`,
+                [
+                    procurement_item_id || null,
+                    item_name,
+                    inventory_code || null,
+                    receive_date,
+                    room_id || null,
+                    qr_code_path,
+                    barcode_path,
+                    photo_path,
+                ],
+                (err, result) => {
+                    if (err) return res.status(500).json({ error: err.message });
+                    res.json({ message: 'Inventaris berhasil diterima.', id: result.insertId });
+                }
+            );
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
     }
 };
 
 // PUT /api/inventories/:id
-exports.updateInventory = (req, res) => {
+exports.updateInventory = async (req, res) => {
     const { id } = req.params;
     const { inventory_code, receive_date, room_id, condition_status } = req.body;
 
-    const qr_code_path = req.files && req.files['qr_code'] ? '/uploads/' + req.files['qr_code'][0].filename : undefined;
-    const barcode_path = req.files && req.files['barcode'] ? '/uploads/' + req.files['barcode'][0].filename : undefined;
-    const photo_path = req.files && req.files['photo'] ? '/uploads/' + req.files['photo'][0].filename : undefined;
+    try {
+        // Generate QR code if inventory_code is provided
+        let qr_code_path = undefined;
+        if (inventory_code) {
+            qr_code_path = await generateQRCode(inventory_code);
+        }
 
-    // Build dynamic SET clause
-    const sets = [];
-    const params = [];
+        const barcode_path = req.files && req.files['barcode'] ? '/uploads/' + req.files['barcode'][0].filename : undefined;
+        const photo_path = req.files && req.files['photo'] ? '/uploads/' + req.files['photo'][0].filename : undefined;
 
-    if (inventory_code !== undefined) { sets.push('inventory_code = ?'); params.push(inventory_code); }
-    if (receive_date !== undefined) { sets.push('receive_date = ?'); params.push(receive_date); }
-    if (room_id !== undefined) { sets.push('room_id = ?'); params.push(room_id || null); }
-    if (condition_status !== undefined) { sets.push('condition_status = ?'); params.push(condition_status); }
-    if (qr_code_path !== undefined) { sets.push('qr_code_path = ?'); params.push(qr_code_path); }
-    if (barcode_path !== undefined) { sets.push('barcode_path = ?'); params.push(barcode_path); }
-    if (photo_path !== undefined) { sets.push('photo_path = ?'); params.push(photo_path); }
+        // Build dynamic SET clause
+        const sets = [];
+        const params = [];
 
-    if (sets.length === 0) {
-        return res.status(422).json({ error: 'Tidak ada data untuk diperbarui.' });
+        if (inventory_code !== undefined) { sets.push('inventory_code = ?'); params.push(inventory_code); }
+        if (receive_date !== undefined) { sets.push('receive_date = ?'); params.push(receive_date); }
+        if (room_id !== undefined) { sets.push('room_id = ?'); params.push(room_id || null); }
+        if (condition_status !== undefined) { sets.push('condition_status = ?'); params.push(condition_status); }
+        if (qr_code_path !== undefined) { sets.push('qr_code_path = ?'); params.push(qr_code_path); }
+        if (barcode_path !== undefined) { sets.push('barcode_path = ?'); params.push(barcode_path); }
+        if (photo_path !== undefined) { sets.push('photo_path = ?'); params.push(photo_path); }
+
+        if (sets.length === 0) {
+            return res.status(422).json({ error: 'Tidak ada data untuk diperbarui.' });
+        }
+
+        params.push(id);
+        db.query(`UPDATE inventories SET ${sets.join(', ')} WHERE id = ?`, params, (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Inventaris berhasil diperbarui.' });
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    params.push(id);
-    db.query(`UPDATE inventories SET ${sets.join(', ')} WHERE id = ?`, params, (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Inventaris berhasil diperbarui.' });
-    });
 };

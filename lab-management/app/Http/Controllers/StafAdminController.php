@@ -58,7 +58,6 @@ class StafAdminController extends Controller
             // fields for inventory
             'inventory_code' => 'nullable|string|max:100',
             'room_id' => 'nullable|integer',
-            'qr_code' => 'nullable|image|max:5120',
             'barcode' => 'nullable|image|max:5120',
             'photo' => 'nullable|image|max:5120',
             // fields for bhp
@@ -92,14 +91,6 @@ class StafAdminController extends Controller
             }
         }
 
-        if ($request->hasFile('qr_code')) {
-            $file = $request->file('qr_code');
-            $multipart[] = [
-                'name' => 'qr_code',
-                'contents' => fopen($file->getRealPath(), 'r'),
-                'filename' => $file->getClientOriginalName(),
-            ];
-        }
         if ($request->hasFile('barcode')) {
             $file = $request->file('barcode');
             $multipart[] = [
