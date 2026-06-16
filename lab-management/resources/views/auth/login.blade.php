@@ -215,19 +215,19 @@
     </p>
     
     <div class="lp-features" id="lp-3d-wrap">
-      <div class="lp-feat 3d-card">
+      <div class="lp-feat lp-3d-card">
         <div class="lp-feat-icon em">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
         </div>
         <div class="lp-feat-txt"><strong>Inventaris Digital</strong><span>Kelola aset &amp; BHP secara terpusat</span></div>
       </div>
-      <div class="lp-feat 3d-card">
+      <div class="lp-feat lp-3d-card">
         <div class="lp-feat-icon gld">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M21 12c0-4.97-4.03-9-9-9S3 7.03 3 12s4.03 9 9 9 9-4.03 9-9"/></svg>
         </div>
         <div class="lp-feat-txt"><strong>Sistem Pengadaan</strong><span>Alur pengajuan yang transparan</span></div>
       </div>
-      <div class="lp-feat 3d-card">
+      <div class="lp-feat lp-3d-card">
         <div class="lp-feat-icon bl">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
@@ -397,7 +397,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   /* 2. GILA: 3D Tilt Effect pada Fitur Kiri */
   const leftPanel = document.getElementById('lp-left');
-  const cards = document.querySelectorAll('.3d-card');
+  const cards = document.querySelectorAll('.lp-3d-card');
   
   leftPanel.addEventListener('mousemove', (e) => {
     let xAxis = (window.innerWidth / 4 - e.pageX) / 25;
@@ -431,10 +431,14 @@ document.addEventListener("DOMContentLoaded", function() {
   const pInp = document.getElementById('lp-password');
   const eye = document.getElementById('lp-eye');
   const OPEN = '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
-  const CLOSED = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  const CLOSED = '<path d="M13.875 18.825A10.05 10.05 0 0 1 12 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 0 1 1.563-4.432m5.921-.78a2.25 2.25 0 0 0-2.846-2.846m7.973 7.973A10.05 10.05 0 0 1 19.503 19a10.048 10.048 0 0 1-9.546-5.746m0 0A9.97 9.97 0 0 0 5.564 6.964m9.986 2.02A7.5 7.5 0 1 1 6.5 12a7.5 7.5 0 0 1 9.986 2.984z"/><line x1="3" y1="3" x2="21" y2="21"/>';
   let shown = false;
-  tBtn.addEventListener('click', () => {
-    shown = !shown; pInp.type = shown ? 'text' : 'password'; eye.innerHTML = shown ? CLOSED : OPEN;
+  tBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    shown = !shown;
+    pInp.type = shown ? 'text' : 'password';
+    eye.innerHTML = shown ? CLOSED : OPEN;
+    tBtn.style.color = shown ? '#3b82f6' : '#94a3b8';
   });
 
   /* Form Validation & Shake Animation */
